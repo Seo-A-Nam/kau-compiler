@@ -1,0 +1,7 @@
+// this is a comment to be ignored
+int a, b;
+a245= 53 + b + 42.345;
+// a=b+c+b
+if (a245<= (182957) Variable25.12 ==what1919;
+for (i = 0; a < x; i++) {
+a = a*2;
