@@ -13,7 +13,7 @@ typedef struct  Token{
 	char    t_value[1000];
 }               Token;
 
-void    pass_space(char *str, int *idx)
+void    pass_whitespace(char *str, int *idx)
 {
 	while (isspace(str[*idx]))
 		(*idx)++;
@@ -31,8 +31,9 @@ bool    is_operator(char *str) {
 		|| strncmp("!", str, 1) == 0 || strncmp("/", str, 1) == 0) {
 		return (true);
 	}
-	if (strncmp("||", str, 2) == 0 || strncmp("&&", str, 2) == 0 || strncmp("==", str, 2) == 0
-		|| strncmp("!=", str, 2) == 0 || strncmp(">=", str, 2) == 0) {
+	if (strncmp("||", str, 2) == 0 || strncmp("&&", str, 2) == 0  || strncmp("==", str, 2) == 0 
+		|| strncmp("!=", str, 2) == 0 || strncmp(">=", str, 2) == 0 || strncmp("<=", str, 2) == 0
+		|| strncmp("++", str, 2) == 0 || strncmp("--", str, 2) == 0) {
 		return (true);
 	}
 	return (false);
@@ -86,19 +87,6 @@ bool    handle_id(char *line, Token *t, int *index, int *err_flag) {
 		return (false);
 	if (isdigit(line[i]))
 		return (false);
-	//if (isdigit(line[i])) // 숫자로 시작하는 id에 대해 예외처리 (id는 숫자와 알파벳으로만 구성되있는데, 시작은 반드시 알파벳으로 시작해야함)
-	//{
-	//	while (line[i])
-	//	{
-	//		if (line[i] == ' ' || line[i] == ',' || is_separator(line[i]) || is_operator(line + i))
-	//			break;
-	//		i++;
-	//	}
-	//	//printf("[%c] %s\n", line[i], line);
-	//	*err_flag = 1;
-	//	(*index) += i;
-	//	return (false);
-	//}
 	while (line[i])
 	{
 		if (line[i] == ' ' || line[i] == ',')
@@ -108,9 +96,8 @@ bool    handle_id(char *line, Token *t, int *index, int *err_flag) {
 			i++;
 			break;
 		}
-		if (!isalnum(line[i])) // id에 숫자나 알파벳이 아닌 문자가 있을 경우에 대한 예외처리.
-		{
-			//printf("[%c] %s\n", line[i], line);
+		if (!isalnum(line[i +1]) && line[i+1] != ' ' && line[i+1] != ',') 
+		{ // id에 숫자나 알파벳이 아닌 문자가 있을 경우에 대한 예외처리.
 			*err_flag = 1;
 			(*index) += i;
 			return (false);
@@ -124,12 +111,31 @@ bool    handle_id(char *line, Token *t, int *index, int *err_flag) {
 	return (true);
 }
 
-bool    handle_literal(char *line, Token *t, int *index) {
+bool    is_numId_error(char *line, int *err_flag)
+{
+	int i = 0;
+
+	while (line[i])
+	{
+		if (line[i] == ' ' || line[i] == ',' || is_separator(line[i]) || is_operator(line + i))
+			return (true);
+		if (!isalnum(line[i]) || isalpha(line[i])) // 숫자로 시작한 토큰에 다른 문자나 알파벳이 바로 붙어있으면 numId 에러
+		{
+			*err_flag = 1;
+			return (false);
+		}
+		i++;
+	}
+	return (true);
+}
+bool    handle_literal(char *line, Token *t, int *index, int *err_flag) {
 	int i = 0;
 	int point_flag = 0;
-	
-	//pass_space(line, index);
-	//printf("[%c] %s\n", line[i], line);
+
+	if (!isdigit(line[0]))
+		return (false);
+	if (!is_numId_error(line, err_flag))
+		return (false);
 	if (is_intlit(line) && !is_floatlit(line))
 	{
 		while (isdigit(line[i])) {
@@ -138,6 +144,7 @@ bool    handle_literal(char *line, Token *t, int *index) {
 		t->t_type = 2;
 		(*index) += i;
 		strncpy(t->t_value, line, i);
+		
 		return (true);
 	}
 	else if (is_floatlit(line)) {
@@ -147,6 +154,7 @@ bool    handle_literal(char *line, Token *t, int *index) {
 		t->t_type = 3;
 		(*index) += i;
 		strncpy(t->t_value, line, i);
+		(*index)--;
 		return (true);
 	}
 	return (false);
@@ -163,30 +171,36 @@ bool    handle_seperator(char *str, Token *t, int *index) {
 
 bool    handle_operator(char *str, Token *t, int *index) {
 	bool    ret = false;
-	
-	if (strncmp("=", str, 1) == 0 || strncmp("<", str, 1) == 0 || strncmp("+", str, 1) == 0
+
+	if (strncmp("||", str, 2) == 0 || strncmp("&&", str, 2) == 0  || strncmp("==", str, 2) == 0 
+		|| strncmp("!=", str, 2) == 0 || strncmp(">=", str, 2) == 0 || strncmp("<=", str, 2) == 0
+		|| strncmp("++", str, 2) == 0 || strncmp("--", str, 2) == 0) {
+		t->t_type = 4;
+		strncpy(t->t_value, str, 2);
+		(*index)++;
+		ret = true;
+	}
+	else if (strncmp("=", str, 1) == 0 || strncmp("<", str, 1) == 0 || strncmp("+", str, 1) == 0
 		|| strncmp("-", str, 1) == 0 || strncmp("*", str, 1) == 0
 		|| strncmp("!", str, 1) == 0 || strncmp("/", str, 1) == 0) {
 		t->t_type = 4;
 		strncpy(t->t_value, str, 1);
-		//(*index)++;
 		ret = true;
 	}
-	else if (strncmp("||", str, 2) == 0 || strncmp("&&", str, 2) == 0  || strncmp("==", str, 2) == 0 
-		|| strncmp("!=", str, 2) == 0 || strncmp(">=", str, 2) == 0) {
-		t->t_type = 4;
-		strncpy(t->t_value, str, 2);
-		//(*index) += 2;
-		(*index) ++;
-		ret = true;
-	}
+	
 	return (ret);
 }
 
 bool    handle_keyword(char *line, Token *t, int *index) {
 	bool    ret = false;
 	
-	if (strncmp("bool", line, 4) == 0 && line[4] == ' ') {
+	if (strncmp("main", line, 4) == 0 && line[4] == ' ') {
+		t->t_type = 0;
+		strncpy(t->t_value, "Main", 4);
+		(*index) += 4;
+		ret = true;
+	}
+	else if (strncmp("bool", line, 4) == 0 && line[4] == ' ') {
 		t->t_type = 0;
 		strncpy(t->t_value, "Bool", 4);
 		(*index) += 4;
@@ -240,6 +254,12 @@ bool    handle_keyword(char *line, Token *t, int *index) {
 		(*index) += 5;
 		ret = true;
 	}
+	else if (strncmp("for", line, 3) == 0 && !(isalnum(line[3])) && !(is_separator(line[3]))) {
+		t->t_type = 0;
+		strncpy(t->t_value, "For", 3);
+		(*index) += 3;
+		ret = true;
+	}
 	return (ret);
 }
 
@@ -255,6 +275,8 @@ bool    handle_comment(char *line, Token *t)
 
 void    print_Token(Token t)
 {
+	if (t.t_type == 6)
+		return ;
 	if (t.t_type == 1 || t.t_type == 2 || t.t_type == 3)
 		printf("%s %s\n", type_list[t.t_type], t.t_value);
 	else
@@ -267,50 +289,47 @@ Token   get_Token(FILE *fp, char **nline, int *nl_flag) { // 1줄씩 읽어서 �
 	static int      request = 0; // 사용자가 get_Tokend을 호출한 횟수 = 받으려는 토큰의 인덱스 번호
 	static int      err_flag = 0; // 에러가 한번이라도 있었으면 다음부터 이 함수 호출하지 않게끔 static으로 남김.
 	static int      i = 0;
-	static int      done = 0;
 	int             idx = 0;
 	size_t          len = 0;
 	ssize_t         read;
 	char            *line = NULL;
 	// 에러토큰은 타입 번호를 -1로 구분. 종료 타입은 타입 번호를 -2로 구분.
 	
-	request++; 
-	printf("%d\t%d\n", request, i);
-	if (i > request - 1 || done == 1) { // 만약 읽어놓은 것이 이미 있으면.
+	request++;
+	if (i > request - 1) { // 만약 읽어놓은 것이 이미 있으면.
 		*nl_flag = 0;
 		return (t[request - 1]);
 	}
 	else { // 요청한 토큰이 없다면 한 문장 더 읽는다.
-		if (done == 1)
-		{
-			Token t;
-			t.t_type = -2;
-		}
 		read = getline(&line, &len, fp);
-		if (read == -1 || read == 0) {
-			done = 1;// 더이상 읽을 게 없거나 에러가 일어날 경우
+		if (read == -1 || read == 0) { // 더이상 읽을 게 없거나 에러가 일어날 경우
+			Token temp = {-2, 0};
+			return (temp);
 		}
 		*nl_flag = 1;
 		*nline = line;
-		if (handle_comment(line, &t[i])) {
+		pass_whitespace(line, &idx);
+		if (line + idx == NULL)
+		{
+			Token temp = {-2, 0};
+			return (temp);
+		}
+		if (handle_comment(line + idx, &t[i])) {
 			i++;
 			return (t[request - 1]);
 		}
 		if (err_flag == 0) {
 			while (idx != read)
 			{
-				pass_space(line + idx, &idx); // 공백 문자는 무시하고 지나감.
-				if (handle_keyword(line + idx, &t[i], &idx)) {
-					idx--;
+				if (handle_keyword(line + idx, &t[i], &idx))
 					i++; // 토큰 인덱스
-				}
-				else if (handle_seperator(line + idx, &t[i], &idx))
+				if (handle_literal(line + idx, &t[i], &idx, &err_flag))
 					i++;
-				else if (handle_operator(line + idx, &t[i], &idx))
-					i++;	
-				else if (handle_literal(line + idx, &t[i], &idx))
+				if (handle_id(line + idx, &t[i], &idx, &err_flag))
 					i++;
-				else if (handle_id(line + idx, &t[i], &idx, &err_flag))
+				if (handle_seperator(line + idx, &t[i], &idx))
+					i++;
+				if (handle_operator(line + idx, &t[i], &idx))
 					i++;
 				if (err_flag == 1) {
 					t[i++].t_type = -1;
@@ -337,14 +356,13 @@ int     main(int argc, char **argv) {
 		return (0);
 	while (1)
 	{
-		sleep(1);
 		memset(&tk, 0, sizeof(Token));
 		tk = get_Token(fp, &line, &nl_flag);
-		if (tk.t_type == -1) {
+		if (tk.t_type == -1) { // 에러 토큰 리턴 시 break
 			error = 1;
 			break;
 		}
-		if (tk.t_type == -2)
+		if (tk.t_type == -2) // 종료 토큰 리턴 시 break
 			break;
 		if (nl_flag == 1) {
 			printf("Line %d %s", line_nb++, line);
