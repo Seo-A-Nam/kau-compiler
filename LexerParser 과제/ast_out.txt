@@ -1,0 +1,31 @@
+Program:
+|
+|-- Declarations:
+|  { <c, int> <b, float> }
+|
+|-- Block (statements)
+  |- Assignment: = 
+  | \-- Variable b  FloatValue: 2.34
+  |- Assignment: = 
+  | \-- Variable c  IntValue: 1 
+  |- Assignment: = 
+  | \-- Variable k  IntValue: 0 
+  |- Conditional: 
+  |
+   \- Binary: 
+   |- Operator: >=
+    \-- Variable c  IntValue: 52 
+    
+      \- Binary: 
+      |- Operator: <
+       \-- Variable k  IntValue: 10 
+      |- Assignment: = 
+      |     \-- Variable n 
+       \- Binary: 
+       |- Operator: +
+        \-- Variable k  IntValue: 1 
+   |- Assignment: = 
+   |  \-- Variable c 
+    \- Binary: 
+    |- Operator: -
+     \-- Variable k  IntValue: 1 

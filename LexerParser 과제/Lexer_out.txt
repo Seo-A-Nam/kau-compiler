@@ -1,0 +1,53 @@
+int
+main
+(
+)
+{
+int
+Identifier	c
+,
+Identifier	k
+;
+float
+Identifier	b
+;
+Identifier	b
+=
+FloatLiteral	2.34
+;
+Identifier	c
+=
+IntLiteral	1
+;
+Identifier	k
+=
+IntLiteral	0
+;
+if
+(
+Identifier	c
+>=
+IntLiteral	52
+)
+{
+while
+(
+Identifier	k
+<
+IntLiteral	10
+)
+Identifier	n
+=
+Identifier	k
++
+IntLiteral	1
+;
+}
+else
+Identifier	c
+=
+Identifier	k
+-
+IntLiteral	1
+;
+}
